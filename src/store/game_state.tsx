@@ -11,6 +11,8 @@ type GameStateStore = {
   currentPlayerTurn: string;
   selectedPiece?: SelectedPiece;
   //
+  onlySelectdPiece: boolean;
+  //
   selectPiece: (piece: PieceType) => void;
   makeMove: (position: Position) => void;
 };
@@ -21,15 +23,18 @@ const useGameState = create<GameStateStore>((set) => ({
   currentPlayerTurn: "white",
   selectedPiece: undefined,
   //
+  onlySelectdPiece: false,
+  //
   selectPiece: (piece: PieceType) => {
-    const { board, currentPlayerTurn } = useGameState.getState();
+    const { board, currentPlayerTurn, selectedPiece } = useGameState.getState();
 
-    if (piece.color !== currentPlayerTurn) return;
+    if (piece.type !== "empty" && piece.color !== currentPlayerTurn) return;
+    if (selectedPiece?.piece != piece) set({ onlySelectdPiece: false });
 
     const validMoves = calculateValidMoves(
       piece.type,
       board.board,
-      piece.color,
+      piece.color!,
       currentPlayerTurn === "white" ? "black" : "white",
       piece.position.row,
       piece.position.column,
@@ -39,12 +44,15 @@ const useGameState = create<GameStateStore>((set) => ({
     return set({ selectedPiece: { piece, validMoves: validMoves } });
   },
   makeMove: (position: Position) => {
-    const { selectedPiece, board, currentPlayerTurn } = useGameState.getState();
+    const { selectedPiece, board, currentPlayerTurn, onlySelectdPiece } = useGameState.getState();
 
     if (!selectedPiece) return;
 
     if (selectedPiece.piece.position.row === position.row && selectedPiece.piece.position.column === position.column) {
-      return set({ selectedPiece: undefined });
+      if (!onlySelectdPiece) set({ onlySelectdPiece: true });
+      else set({ selectedPiece: undefined });
+
+      return;
     }
 
     const isValidMove = selectedPiece.validMoves.some((move) => move.row === position.row && move.column === position.column);
