@@ -6,7 +6,7 @@ import Piece from "../piece";
 import { useGameState } from "@/store";
 
 export default function Cell({ row, column, piece }: Readonly<{ row: number; column: number; piece: PieceType }>) {
-  const { isOver, setNodeRef } = useDroppable({ id: `cell_${row}_${column}`, data: { position: { row, column } } });
+  const { setNodeRef } = useDroppable({ id: `cell_${row}_${column}`, data: { position: { row, column } } });
   const { selectedPiece } = useGameState((state) => state);
 
   const rows = ["1", "2", "3", "4", "5", "6", "7", "8"];

@@ -2,6 +2,12 @@
 
 export type Board = {
   board: PieceType[][];
+  //
+  currentPlayerTurn: string;
+  castlingRights: string;
+  enPassantTarget: string;
+  halfMoveClock: number;
+  fullMoveNumber: number;
 };
 
 export type Position = {
@@ -16,6 +22,8 @@ export type PieceType = {
   position: Position;
   //
   settings: any;
+  notation: string;
+  fen: string | null;
 };
 
 export type SelectedPiece = {

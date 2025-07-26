@@ -129,7 +129,7 @@ const kingMoves = (board: PieceType[][], color: string, row: number, column: num
   return moves;
 };
 
-const calculateValidMoves = (
+const calculatePseudoLegalMoves = (
   type: string,
   board: PieceType[][],
   color: string,
@@ -153,4 +153,4 @@ const calculateValidMoves = (
   return [];
 };
 
-export { calculateValidMoves };
+export { calculatePseudoLegalMoves };

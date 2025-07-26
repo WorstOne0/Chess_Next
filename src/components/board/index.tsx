@@ -9,7 +9,7 @@ import { useGameState } from "@/store";
 import { Cell } from "@/components";
 
 export default function Board() {
-  const { board, selectedPiece, selectPiece, makeMove } = useGameState((state) => state);
+  const { board, selectPiece, makeMove } = useGameState((state) => state);
 
   useMount(() => {
     console.log("board", board);

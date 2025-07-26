@@ -3,8 +3,6 @@
 // Next
 import Image from "next/image";
 import { useDraggable } from "@dnd-kit/core";
-// Store
-import { useGameState } from "@/store";
 // Utils
 import { PieceType } from "@/utils/chess_types";
 
@@ -20,7 +18,6 @@ import white_knight from "@/../public/white_knight.svg";
 import white_pawn from "@/../public/white_pawn.svg";
 import white_queen from "@/../public/white_queen.svg";
 import white_rook from "@/../public/white_rook.svg";
-import { PointerEventHandler } from "react";
 
 export default function Piece({ piece }: Readonly<{ piece: PieceType }>) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
