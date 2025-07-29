@@ -7,19 +7,37 @@ import { useGameState } from "@/store";
 
 export default function Cell({ row, column, piece }: Readonly<{ row: number; column: number; piece: PieceType }>) {
   const { setNodeRef } = useDroppable({ id: `cell_${row}_${column}`, data: { position: { row, column } } });
-  const { selectedPiece } = useGameState((state) => state);
+  const { board, selectedPiece } = useGameState((state) => state);
 
   const rows = ["1", "2", "3", "4", "5", "6", "7", "8"];
   const columns = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
   const backgroundColor = () => {
-    if (selectedPiece) {
-      if (selectedPiece.piece.position.row === row && selectedPiece.piece.position.column === column) return "#FF0000";
-
-      if (selectedPiece.validMoves.some((move) => move.row === row && move.column === column)) return "#00FF00";
-    }
-
     return (row + column + 1) % 2 === 0 ? "#b58863" : "#f0d9b5";
+  };
+
+  const isSelectedPiece = selectedPiece && selectedPiece.piece.position.row === row && selectedPiece.piece.position.column === column;
+  const isValidMove = () => {
+    if (!selectedPiece) return false;
+
+    const move = selectedPiece.validMoves.find((move) => move.row === row && move.column === column);
+    if (!move) return false;
+
+    const pieceOnPosition = board.board[row][column];
+    if (pieceOnPosition.type !== "empty") return false;
+
+    return true;
+  };
+  const isCapture = () => {
+    if (!selectedPiece) return false;
+
+    const move = selectedPiece.validMoves.find((move) => move.row === row && move.column === column);
+    if (!move) return false;
+
+    const pieceOnPosition = board.board[row][column];
+    if (pieceOnPosition.type === "empty") return false;
+
+    return true;
   };
 
   return (
@@ -37,6 +55,14 @@ export default function Cell({ row, column, piece }: Readonly<{ row: number; col
           <span className={`font-bold text-[2rem]  ${(row + column + 1) % 2 === 0 ? "text-white" : "text-black"}`}>{columns[column]}</span>
         </div>
       )}
+
+      {isValidMove() && (
+        <div className="h-[30%] w-[30%] absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-gray-500 opacity-20 rounded-full"></div>
+      )}
+
+      {isCapture() && <div className="h-full w-full absolute absolute top-0 left-0 bg-red-500"></div>}
+
+      {isSelectedPiece && <div className="h-full w-full absolute top-0 left-0 border-[0.5rem] border-white"></div>}
     </div>
   );
 }

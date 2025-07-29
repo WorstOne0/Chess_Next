@@ -32,6 +32,8 @@ export default function Piece({ piece }: Readonly<{ piece: PieceType }>) {
       }
     : undefined;
 
+  if (piece.type === "empty") return <></>;
+
   return (
     <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="h-full w-full flex justify-center items-center z-[10]">
       {piece.type === "pawn" && <Image className="h-[90%] w-[90%]" src={piece.color === "white" ? white_pawn : black_pawn} alt="pawn" />}

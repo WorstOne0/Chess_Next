@@ -2,6 +2,7 @@
 
 export type Board = {
   board: PieceType[][];
+  fen: string;
   //
   currentPlayerTurn: string;
   castlingRights: string;

@@ -1,4 +1,15 @@
-import { Board, PieceType } from "./chess_types";
+import { Board, PieceType, Position } from "./chess_types";
+
+const boardNotation = [
+  ["a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"],
+  ["a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"],
+  ["a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6"],
+  ["a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5"],
+  ["a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4"],
+  ["a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3"],
+  ["a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2"],
+  ["a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"],
+];
 
 const buildBoard = ({ fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }: { fen?: string }) => {
   const startPosition = fen.split(" ")[0];
@@ -27,7 +38,7 @@ const buildBoard = ({ fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 
           type: "pawn",
           position: { row: rowIndex, column: columnIndex },
           color: piece === "P" ? "white" : "black",
-          settings: { hasMoved: false },
+          settings: {},
           notation: "",
           fen: piece,
         });
@@ -60,7 +71,7 @@ const buildBoard = ({ fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 
           type: "rook",
           position: { row: rowIndex, column: columnIndex },
           color: piece === "R" ? "white" : "black",
-          settings: { hasMoved: false },
+          settings: {},
           notation: "R",
           fen: piece,
         });
@@ -82,7 +93,7 @@ const buildBoard = ({ fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 
           type: "king",
           position: { row: rowIndex, column: columnIndex },
           color: piece === "K" ? "white" : "black",
-          settings: { hasMoved: false },
+          settings: {},
           notation: "K",
           fen: piece,
         });
@@ -103,12 +114,66 @@ const buildBoard = ({ fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 
 
   return {
     board: board,
+    fen,
     currentPlayerTurn: currentPlayerTurn == "b" ? "black" : "white",
     castlingRights,
     enPassantTarget,
     halfMoveClock,
     fullMoveNumber,
   };
+};
+
+const generateNewBoard = (board: Board, piece: PieceType, position: Position) => {
+  const newBoard = board.board.map((row) => [...row]);
+  const oldRow = piece.position.row;
+  const oldColumn = piece.position.column;
+
+  let moveNotation = generateNotation(board, piece, position);
+  const newPiece = { ...piece, position: { row: position.row, column: position.column } };
+
+  // O-O
+  if (piece.type === "king" && position.column - oldColumn === 2) {
+    const rook = board.board[oldRow][7];
+    newBoard[oldRow][5] = { ...rook, position: { row: oldRow, column: 5 } };
+    newBoard[oldRow][7] = {
+      type: "empty",
+      position: { row: oldRow, column: 7 },
+      color: null,
+      settings: {},
+      notation: "",
+      fen: null,
+    };
+
+    moveNotation = "O-O";
+  }
+  // O-O-O
+  if (piece.type === "king" && oldColumn - position.column === 2) {
+    const rook = board.board[oldRow][0];
+    newBoard[oldRow][3] = rook;
+    newBoard[oldRow][0] = {
+      type: "empty",
+      position: { row: oldRow, column: 0 },
+      color: null,
+      settings: {},
+      notation: "",
+      fen: null,
+    };
+
+    moveNotation = "O-O-O";
+  }
+
+  newBoard[position.row][position.column] = newPiece;
+  newBoard[oldRow][oldColumn] = {
+    type: "empty",
+    position: { row: oldRow, column: oldColumn },
+    color: null,
+    settings: {},
+    notation: "",
+    fen: null,
+  };
+
+  console.log({ newBoard, newPiece, moveNotation });
+  return { newBoard, newPiece, moveNotation };
 };
 
 const generateFen = (board: Board) => {
@@ -150,7 +215,7 @@ const generateFen = (board: Board) => {
   fen += " ";
 
   // En Passant
-  fen += "-";
+  fen += board.enPassantTarget.length > 0 ? board.enPassantTarget : "-";
   fen += " ";
 
   // Half Move Clock
@@ -163,4 +228,61 @@ const generateFen = (board: Board) => {
   return fen;
 };
 
-export { buildBoard, generateFen };
+const generateNotation = (board: Board, movedPiece: PieceType, toPositon: Position) => {
+  let move = movedPiece.notation;
+
+  const pieceOnPosition = board.board[toPositon.row][toPositon.column];
+
+  if (pieceOnPosition.type !== "empty" && movedPiece.type !== "pawn") move += "x";
+  if (pieceOnPosition.type !== "empty" && movedPiece.type === "pawn") {
+    move += `${boardNotation[movedPiece.position.row][movedPiece.position.column].split("")[0]}x`;
+  }
+
+  move += boardNotation[toPositon.row][toPositon.column];
+
+  return move;
+};
+
+const handleCastlingRights = (board: Board, piece: PieceType, oldPosition: Position) => {
+  let castlingRights = board.castlingRights;
+
+  // King
+  if (piece.type === "king" && board.currentPlayerTurn === "white") {
+    castlingRights = castlingRights.replace("K", "").replace("Q", "");
+  }
+  if (piece.type === "king" && board.currentPlayerTurn === "black") {
+    castlingRights = castlingRights.replace("k", "").replace("q", "");
+  }
+
+  // Rook
+  if (piece.type === "rook" && board.currentPlayerTurn === "white") {
+    if (oldPosition.row === 7 && oldPosition.column === 7) castlingRights = castlingRights.replace("K", "");
+    if (oldPosition.row === 7 && oldPosition.column === 0) castlingRights = castlingRights.replace("Q", "");
+  }
+  if (piece.type === "rook" && board.currentPlayerTurn === "black") {
+    if (oldPosition.row === 0 && oldPosition.column === 7) castlingRights = castlingRights.replace("k", "");
+    if (oldPosition.row === 0 && oldPosition.column === 0) castlingRights = castlingRights.replace("q", "");
+  }
+
+  return castlingRights;
+};
+
+const handleEnPassantTarget = (board: Board, piece: PieceType, oldPosition: Position) => {
+  let enPassantTarget = "";
+
+  if (piece.type === "pawn" && board.currentPlayerTurn === "white") {
+    const movedSquares = oldPosition.row - piece.position.row;
+
+    if (movedSquares == 2) enPassantTarget = `${boardNotation[oldPosition.row - 1][oldPosition.column]}`;
+  }
+
+  if (piece.type === "pawn" && board.currentPlayerTurn === "black") {
+    const movedSquares = piece.position.row - oldPosition.row;
+
+    if (movedSquares == 2) enPassantTarget = `${boardNotation[oldPosition.row + 1][oldPosition.column]}`;
+  }
+
+  return enPassantTarget;
+};
+
+export { buildBoard, generateNewBoard, generateFen, generateNotation, handleCastlingRights, handleEnPassantTarget };

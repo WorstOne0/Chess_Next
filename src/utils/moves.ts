@@ -1,16 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { PieceType } from "./chess_types";
+import { Board, PieceType } from "./chess_types";
 
-const pawnMoves = (board: PieceType[][], color: string, row: number, column: number, hasMoved: boolean) => {
+const pawnMoves = (fullBoard: Board, piece: PieceType) => {
+  const { board } = fullBoard;
+  const { row, column } = piece.position;
+
   const moves = [];
 
-  if (color === "white") {
+  if (piece.color === "white") {
     // Move up one square if its not blocked
     if (board[row - 1][column].color === null) moves.push({ row: row - 1, column: column });
 
     // If it is the first move, move up two squares if its not blocked
-    if (!hasMoved) {
+    if (row === 6) {
       if (board[row - 1][column].color === null && board[row - 2][column].color === null) moves.push({ row: row - 2, column: column });
     }
 
@@ -24,7 +27,7 @@ const pawnMoves = (board: PieceType[][], color: string, row: number, column: num
     if (board[row + 1][column].color === null) moves.push({ row: row + 1, column: column });
 
     // If it is the first move, move down two squares if its not blocked
-    if (!hasMoved) {
+    if (row === 1) {
       if (board[row + 1][column].color === null && board[row + 2][column].color === null) moves.push({ row: row + 2, column: column });
     }
 
@@ -38,9 +41,11 @@ const pawnMoves = (board: PieceType[][], color: string, row: number, column: num
   return moves;
 };
 
-const knightMoves = (board: PieceType[][], color: string, row: number, column: number) => {
-  const moves = [];
+const knightMoves = (fullBoard: Board, piece: PieceType) => {
+  const { board } = fullBoard;
+  const { row, column } = piece.position;
 
+  const moves = [];
   const rowMoves = [2, 1, -1, -2, -2, -1, 1, 2];
   const columnMoves = [1, 2, 2, 1, -1, -2, -2, -1];
 
@@ -48,7 +53,7 @@ const knightMoves = (board: PieceType[][], color: string, row: number, column: n
     const newRow = row + rowMoves[i];
     const newColumn = column + columnMoves[i];
 
-    if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== color) {
+    if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
       moves.push({ row: newRow, column: newColumn });
     }
   }
@@ -56,9 +61,12 @@ const knightMoves = (board: PieceType[][], color: string, row: number, column: n
   return moves;
 };
 
-const bishopMoves = (board: PieceType[][], color: string, opponentColor: string, row: number, column: number) => {
-  const moves = [];
+const bishopMoves = (fullBoard: Board, piece: PieceType) => {
+  const { board } = fullBoard;
+  const { row, column } = piece.position;
+  const opponentColor = fullBoard.currentPlayerTurn === "white" ? "black" : "white";
 
+  const moves = [];
   const rowMoves = [-1, -1, 1, 1];
   const columnMoves = [-1, 1, -1, 1];
 
@@ -66,7 +74,7 @@ const bishopMoves = (board: PieceType[][], color: string, opponentColor: string,
     let newRow = row + rowMoves[i];
     let newColumn = column + columnMoves[i];
 
-    while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== color) {
+    while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
       moves.push({ row: newRow, column: newColumn });
 
       if (board[newRow][newColumn].color === opponentColor) break;
@@ -79,9 +87,12 @@ const bishopMoves = (board: PieceType[][], color: string, opponentColor: string,
   return moves;
 };
 
-const rookMoves = (board: PieceType[][], color: string, opponentColor: string, row: number, column: number) => {
-  const moves = [];
+const rookMoves = (fullBoard: Board, piece: PieceType) => {
+  const { board } = fullBoard;
+  const { row, column } = piece.position;
+  const opponentColor = fullBoard.currentPlayerTurn === "white" ? "black" : "white";
 
+  const moves = [];
   const rowMoves = [-1, 0, 1, 0];
   const columnMoves = [0, 1, 0, -1];
 
@@ -89,7 +100,7 @@ const rookMoves = (board: PieceType[][], color: string, opponentColor: string, r
     let newRow = row + rowMoves[i];
     let newColumn = column + columnMoves[i];
 
-    while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== color) {
+    while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
       moves.push({ row: newRow, column: newColumn });
 
       if (board[newRow][newColumn].color === opponentColor) break;
@@ -102,18 +113,20 @@ const rookMoves = (board: PieceType[][], color: string, opponentColor: string, r
   return moves;
 };
 
-const queenMoves = (board: PieceType[][], color: string, opponentColor: string, row: number, column: number) => {
+const queenMoves = (fullBoard: Board, piece: PieceType) => {
   let moves: any[] = [];
 
-  moves = [...moves, ...bishopMoves(board, color, opponentColor, row, column)];
-  moves = [...moves, ...rookMoves(board, color, opponentColor, row, column)];
+  moves = [...moves, ...bishopMoves(fullBoard, piece)];
+  moves = [...moves, ...rookMoves(fullBoard, piece)];
 
   return moves;
 };
 
-const kingMoves = (board: PieceType[][], color: string, row: number, column: number) => {
-  const moves = [];
+const kingMoves = (fullBoard: Board, piece: PieceType) => {
+  const { board } = fullBoard;
+  const { row, column } = piece.position;
 
+  const moves = [];
   const rowMoves = [-1, 0, 1, 0, -1, -1, 1, 1];
   const columnMoves = [0, 1, 0, -1, -1, 1, -1, 1];
 
@@ -121,34 +134,44 @@ const kingMoves = (board: PieceType[][], color: string, row: number, column: num
     const newRow = row + rowMoves[i];
     const newColumn = column + columnMoves[i];
 
-    if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== color) {
+    if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
       moves.push({ row: newRow, column: newColumn });
     }
+  }
+
+  // O-O
+  if (piece.color === "white" && fullBoard.castlingRights.includes("K")) {
+    if (board[7][5].color === null && board[7][6].color === null) moves.push({ row: 7, column: 6 });
+  }
+  // O-O-O
+  if (piece.color === "white" && fullBoard.castlingRights.includes("Q")) {
+    if (board[7][3].color === null && board[7][2].color === null && board[7][1].color === null) moves.push({ row: 7, column: 2 });
+  }
+
+  // O-O
+  if (piece.color === "black" && fullBoard.castlingRights.includes("k")) {
+    if (board[0][5].color === null && board[0][6].color === null) moves.push({ row: 0, column: 6 });
+  }
+  // O-O-O
+  if (piece.color === "black" && fullBoard.castlingRights.includes("q")) {
+    if (board[0][3].color === null && board[0][2].color === null && board[0][1].color === null) moves.push({ row: 0, column: 2 });
   }
 
   return moves;
 };
 
-const calculatePseudoLegalMoves = (
-  type: string,
-  board: PieceType[][],
-  color: string,
-  opponentColor: string,
-  row: number,
-  column: number,
-  settings: any
-) => {
-  if (type === "pawn") return pawnMoves(board, color, row, column, settings.hasMoved);
+const calculatePseudoLegalMoves = (board: Board, piece: PieceType) => {
+  if (piece.type === "pawn") return pawnMoves(board, piece);
 
-  if (type === "knight") return knightMoves(board, color, row, column);
+  if (piece.type === "knight") return knightMoves(board, piece);
 
-  if (type === "bishop") return bishopMoves(board, color, opponentColor, row, column);
+  if (piece.type === "bishop") return bishopMoves(board, piece);
 
-  if (type === "rook") return rookMoves(board, color, opponentColor, row, column);
+  if (piece.type === "rook") return rookMoves(board, piece);
 
-  if (type === "queen") return queenMoves(board, color, opponentColor, row, column);
+  if (piece.type === "queen") return queenMoves(board, piece);
 
-  if (type === "king") return kingMoves(board, color, row, column);
+  if (piece.type === "king") return kingMoves(board, piece);
 
   return [];
 };
