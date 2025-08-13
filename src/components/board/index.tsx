@@ -16,12 +16,10 @@ export default function Board() {
   });
 
   const onDragStart = (event: DragStartEvent) => {
-    console.log("onDragStart", event);
     selectPiece(event.active.data.current?.piece);
   };
 
   const onDragEnd = (event: DragEndEvent) => {
-    console.log("onDragEnd", event);
     makeMove(event.over?.data.current?.position);
   };
 
@@ -32,8 +30,8 @@ export default function Board() {
         <div className="min-h-[5rem] h-[5rem] w-full bg-blue-500"></div>
 
         {/* Header */}
-        <div className="min-h-0 grow w-full flex justify-center items-center bg-purple-500">
-          <div className="h-[82rem] w-[82rem] grid grid-cols-8 grid-rows-8 bg-gray-500">
+        <div className="min-h-0 grow w-full flex justify-center items-center bg-background">
+          <div className="h-[82rem] w-[82rem] grid grid-cols-8 grid-rows-8 bg-[#826247] rounded-[0.8rem] overflow-hidden shadow-xl/20">
             {board.board.map((row, indexRow) => {
               return row.map((piece, indexColumn) => (
                 <Cell key={`cell_${indexRow}_${indexColumn}`} row={indexRow} column={indexColumn} piece={piece} />
