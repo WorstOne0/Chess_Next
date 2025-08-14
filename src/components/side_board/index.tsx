@@ -15,7 +15,7 @@ export default function SideBoard() {
   };
 
   return (
-    <div className="h-full w-full flex items-center justify-center">
+    <div className="h-full w-full flex items-center justify-center bg-primary">
       <div className="h-[20rem] w-full flex"></div>
 
       <div className="min-h-0 w-full grow">

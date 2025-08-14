@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="h-full w-full flex items-center justify-center">
       {/* Sidebar */}
-      <div className="h-full w-[50rem] bg-blue-500">
+      <div className="h-full w-[50rem]">
         <SideBoard />
       </div>
 
