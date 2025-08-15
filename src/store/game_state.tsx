@@ -2,35 +2,42 @@
 
 //
 import { create } from "zustand";
+import axiosInstance from "@/services/axios";
 //
 import { Board, PieceType, Position, SelectedPiece } from "@/utils/chess_types";
-import { buildBoard, generateFen, generateNewBoard, handleCastlingRights, handleEnPassantTarget } from "@/utils/board";
+import { buildBoard, generateFen, generateNewBoard, handleCastlingRights, handleEnPassantTarget, getMoveFromStockfish } from "@/utils/board";
 import { calculatePseudoLegalMoves } from "@/utils/moves";
 
 type GameStateStore = {
   board: Board;
+  player: string;
   //
   selectedPiece?: SelectedPiece;
   onlySelectdPiece: boolean;
   //
   previousMoves: string[];
+  evaluation: number;
   //
   selectPiece: (piece: PieceType) => void;
   makeMove: (position: Position) => { sound: string };
+  makeBotMove: () => Promise<{ sound: string }>;
 };
 
 const useGameState = create<GameStateStore>((set) => ({
   board: buildBoard({ fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }),
+  player: "white",
   //
   selectedPiece: undefined,
   onlySelectdPiece: false,
   //
   previousMoves: [],
+  evaluation: 0,
   //
   selectPiece: (piece: PieceType) => {
-    const { board, selectedPiece } = useGameState.getState();
+    const { board, selectedPiece, player } = useGameState.getState();
 
     if (piece.type !== "empty" && piece.color !== board.currentPlayerTurn) return;
+    if (piece.color !== player) return;
     if (selectedPiece?.piece != piece) set({ onlySelectdPiece: false });
 
     const validMoves = calculatePseudoLegalMoves(board, piece);
@@ -38,7 +45,7 @@ const useGameState = create<GameStateStore>((set) => ({
     return set({ selectedPiece: { piece, validMoves: validMoves } });
   },
   makeMove: (position: Position) => {
-    const { selectedPiece, board, onlySelectdPiece, previousMoves } = useGameState.getState();
+    const { selectedPiece, board, onlySelectdPiece, previousMoves, makeBotMove } = useGameState.getState();
 
     if (!selectedPiece) return { sound: "" };
 
@@ -54,6 +61,44 @@ const useGameState = create<GameStateStore>((set) => ({
 
     const oldRow = selectedPiece.piece.position.row;
     const oldColumn = selectedPiece.piece.position.column;
+    const { newBoard, newPiece, moveNotation } = generateNewBoard(board, selectedPiece.piece, position);
+
+    const castlingRights = handleCastlingRights(board, newPiece, { row: oldRow, column: oldColumn });
+    const enPassantTarget = handleEnPassantTarget(board, newPiece, { row: oldRow, column: oldColumn });
+
+    const updatedBoard = {
+      board: newBoard,
+      fen: "",
+      currentPlayerTurn: board.currentPlayerTurn === "white" ? "black" : "white",
+      castlingRights,
+      enPassantTarget,
+      halfMoveClock: board.halfMoveClock,
+      fullMoveNumber: board.currentPlayerTurn === "black" ? board.fullMoveNumber + 1 : board.fullMoveNumber,
+    };
+
+    set({
+      board: { ...updatedBoard, fen: generateFen(updatedBoard) },
+      selectedPiece: undefined,
+      previousMoves: [...previousMoves, moveNotation],
+    });
+
+    let sound = "move-self.mp3";
+    if (moveNotation.includes("x")) sound = "capture.mp3";
+    if (moveNotation === "O-O" || moveNotation === "O-O-O") sound = "castle.mp3";
+
+    makeBotMove();
+
+    return { sound };
+  },
+  makeBotMove: async () => {
+    const { board, previousMoves } = useGameState.getState();
+
+    const response = await axiosInstance.get(`https://stockfish.online/api/s/v2.php?fen=${board.fen}&depth=12`);
+    const { evaluation, continuation, mate } = response.data;
+
+    const move = continuation.split(" ")[0];
+    const { selectedPiece, position, oldRow, oldColumn } = getMoveFromStockfish(move, board);
+
     const { newBoard, newPiece, moveNotation } = generateNewBoard(board, selectedPiece.piece, position);
 
     const castlingRights = handleCastlingRights(board, newPiece, { row: oldRow, column: oldColumn });

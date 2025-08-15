@@ -1,6 +1,7 @@
 "use client";
 
 import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import useSound from "use-sound";
 // Hooks
 import { useMount } from "@/hooks";
@@ -8,7 +9,7 @@ import { useMount } from "@/hooks";
 import { useGameState } from "@/store";
 // Components
 import { Cell } from "@/components";
-
+//
 import { RiTimerLine } from "react-icons/ri";
 
 export default function Board() {
@@ -39,7 +40,7 @@ export default function Board() {
   };
 
   return (
-    <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
+    <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[snapCenterToCursor]}>
       <div className="h-full w-full flex flex-col bg-background">
         {/* Opponent */}
         <div className="min-h-[6rem] h-[6rem] w-full flex justify-between items-center px-[2rem] mb-[1.5rem]">

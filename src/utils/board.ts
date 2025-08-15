@@ -285,4 +285,31 @@ const handleEnPassantTarget = (board: Board, piece: PieceType, oldPosition: Posi
   return enPassantTarget;
 };
 
-export { buildBoard, generateNewBoard, generateFen, generateNotation, handleCastlingRights, handleEnPassantTarget };
+const getMoveFromStockfish = (move: string, board: Board) => {
+  const moveFrom = move.substring(0, 2);
+  const moveTo = move.substring(2, 4);
+
+  let rowFrom = 0;
+  let columnFrom = 0;
+  let rowTo = 0;
+  let columnTo = 0;
+
+  for (const row of boardNotation) {
+    if (row.includes(moveFrom)) {
+      columnFrom = row.indexOf(moveFrom);
+      rowFrom = boardNotation.indexOf(row);
+    }
+
+    if (row.includes(moveTo)) {
+      columnTo = row.indexOf(moveTo);
+      rowTo = boardNotation.indexOf(row);
+    }
+  }
+
+  const selectedPiece = board.board[rowFrom][columnFrom];
+  const position = { row: rowTo, column: columnTo };
+
+  return { selectedPiece: { piece: selectedPiece }, position, oldRow: rowFrom, oldColumn: columnFrom };
+};
+
+export { buildBoard, generateNewBoard, generateFen, generateNotation, handleCastlingRights, handleEnPassantTarget, getMoveFromStockfish };
