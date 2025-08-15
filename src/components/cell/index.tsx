@@ -64,7 +64,7 @@ export default function Cell({ row, column, piece }: Readonly<{ row: number; col
 
       {isValidMove() && (
         <div className="h-[92%] w-[92%] flex justify-center items-center absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] border-4 border-blue-900 rounded-[0.8rem]">
-          <div className="h-[30%] w-[30%] bg-blue-900 opacity-[0.5] rounded-full shadow-xl/20"></div>
+          <div className="h-[30%] w-[30%] bg-blue-900 opacity-[0.6] rounded-full shadow-xl/20"></div>
         </div>
       )}
 

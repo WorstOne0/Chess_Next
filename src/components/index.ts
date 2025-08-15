@@ -6,6 +6,7 @@ import Cell from "./cell";
 import Piece from "./piece";
 
 // Shadcn
+import { Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent } from "./ui/card";
 
 // Export Components
 export {
@@ -18,4 +19,11 @@ export {
   //
 
   // Shadcn
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
 };

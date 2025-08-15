@@ -1,3 +1,5 @@
+"use client";
+
 //
 import { create } from "zustand";
 //
@@ -14,7 +16,7 @@ type GameStateStore = {
   previousMoves: string[];
   //
   selectPiece: (piece: PieceType) => void;
-  makeMove: (position: Position) => void;
+  makeMove: (position: Position) => { sound: string };
 };
 
 const useGameState = create<GameStateStore>((set) => ({
@@ -38,17 +40,17 @@ const useGameState = create<GameStateStore>((set) => ({
   makeMove: (position: Position) => {
     const { selectedPiece, board, onlySelectdPiece, previousMoves } = useGameState.getState();
 
-    if (!selectedPiece) return;
+    if (!selectedPiece) return { sound: "" };
 
     if (selectedPiece.piece.position.row === position.row && selectedPiece.piece.position.column === position.column) {
       if (!onlySelectdPiece) set({ onlySelectdPiece: true });
       else set({ selectedPiece: undefined });
 
-      return;
+      return { sound: "" };
     }
 
     const isValidMove = selectedPiece.validMoves.some((move) => move.row === position.row && move.column === position.column);
-    if (!isValidMove) return;
+    if (!isValidMove) return { sound: "" };
 
     const oldRow = selectedPiece.piece.position.row;
     const oldColumn = selectedPiece.piece.position.column;
@@ -67,15 +69,17 @@ const useGameState = create<GameStateStore>((set) => ({
       fullMoveNumber: board.currentPlayerTurn === "black" ? board.fullMoveNumber + 1 : board.fullMoveNumber,
     };
 
-    console.log("generateFen(updatedBoard)", generateFen(updatedBoard));
-
     set({
       board: { ...updatedBoard, fen: generateFen(updatedBoard) },
       selectedPiece: undefined,
       previousMoves: [...previousMoves, moveNotation],
     });
 
-    return;
+    let sound = "move-self.mp3";
+    if (moveNotation.includes("x")) sound = "capture.mp3";
+    if (moveNotation === "O-O" || moveNotation === "O-O-O") sound = "castle.mp3";
+
+    return { sound };
   },
 }));
 

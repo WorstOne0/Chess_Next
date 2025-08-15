@@ -1,6 +1,7 @@
 "use client";
 
 import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import useSound from "use-sound";
 // Hooks
 import { useMount } from "@/hooks";
 // Store
@@ -12,6 +13,11 @@ import { RiTimerLine } from "react-icons/ri";
 
 export default function Board() {
   const { board, selectPiece, makeMove } = useGameState((state) => state);
+  const [moveSelfAudio] = useSound("/sound/move-self.mp3");
+  const [captureAudio] = useSound("/sound/capture.mp3");
+  const [moveCheckAudio] = useSound("/sound/move-check.mp3");
+  const [promoteAudio] = useSound("/sound/promote.mp3");
+  const [castleAudio] = useSound("/sound/castle.mp3");
 
   useMount(() => {
     console.log("board", board);
@@ -22,7 +28,14 @@ export default function Board() {
   };
 
   const onDragEnd = (event: DragEndEvent) => {
-    makeMove(event.over?.data.current?.position);
+    const { sound } = makeMove(event.over?.data.current?.position);
+    if (!sound) return;
+
+    if (sound == "move-self.mp3") moveSelfAudio();
+    if (sound == "capture.mp3") captureAudio();
+    if (sound == "move-check.mp3") moveCheckAudio();
+    if (sound == "promote.mp3") promoteAudio();
+    if (sound == "castle.mp3") castleAudio();
   };
 
   return (
@@ -34,12 +47,12 @@ export default function Board() {
             <div className="w-[5rem] h-[5rem] bg-primary rounded-[0.8rem]"></div>
             <div className="flex flex-col ml-[1.5rem]">
               <span className="">Opponent</span>
-              <span className="text-[1.4rem]">1320</span>
+              <span className="text-[1.4rem]">400</span>
             </div>
           </div>
           <div className="h-[4rem] w-[10rem] bg-primary rounded-[0.8rem] flex justify-center items-center">
             <RiTimerLine className="mr-[0.8rem]" size={22} color="white" />
-            <span className="text-[1.6rem] font-bold">09:10</span>
+            <span className="text-[1.6rem] text-white font-bold">09:10</span>
           </div>
         </div>
 
@@ -59,13 +72,13 @@ export default function Board() {
           <div className="flex items-center">
             <div className="w-[5rem] h-[5rem] bg-primary rounded-[0.8rem]"></div>
             <div className="flex flex-col ml-[1.5rem]">
-              <span className="">Opponent</span>
-              <span className="text-[1.4rem]">1320</span>
+              <span className="">Player</span>
+              <span className="text-[1.4rem]">9999</span>
             </div>
           </div>
           <div className="h-[4rem] w-[10rem] bg-primary rounded-[0.8rem] flex justify-center items-center">
             <RiTimerLine className="mr-[0.8rem]" size={22} color="white" />
-            <span className="text-[1.6rem] font-bold">09:10</span>
+            <span className="text-[1.6rem] text-white font-bold">09:10</span>
           </div>
         </div>
       </div>
