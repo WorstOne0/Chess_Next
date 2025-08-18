@@ -9,8 +9,8 @@ COPY . .
 
 # RUN npm install
 RUN pnpm install
+RUN pnpm run build
 
 EXPOSE ${PORT}
 
-CMD ["pnpm", "build"]
 CMD ["pnpm", "start"]
