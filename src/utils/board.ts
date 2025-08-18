@@ -125,6 +125,8 @@ const buildBoard = ({ fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 
     //
     attackedSquares: {},
     checkedSquares: {},
+    captureMask: {},
+    pushMask: {},
   };
 };
 
@@ -304,7 +306,7 @@ const generateAttackedSquares = (board: Board) => {
     fen: null,
   };
 
-  const attackedSquares: Record<string, boolean> = {};
+  const attackedSquares: Record<string, Position> = {};
   for (const row of board.board) {
     for (const piece of row) {
       if (piece.type === "empty") continue;
@@ -312,11 +314,23 @@ const generateAttackedSquares = (board: Board) => {
 
       if (piece.type === "pawn") {
         if (piece.color === "white") {
-          attackedSquares[`${boardNotation[piece.position.row - 1][piece.position.column + 1]}`] = true;
-          attackedSquares[`${boardNotation[piece.position.row - 1][piece.position.column - 1]}`] = true;
+          attackedSquares[`${boardNotation[piece.position.row - 1][piece.position.column + 1]}`] = {
+            row: piece.position.row - 1,
+            column: piece.position.column + 1,
+          };
+          attackedSquares[`${boardNotation[piece.position.row - 1][piece.position.column - 1]}`] = {
+            row: piece.position.row - 1,
+            column: piece.position.column - 1,
+          };
         } else {
-          attackedSquares[`${boardNotation[piece.position.row + 1][piece.position.column + 1]}`] = true;
-          attackedSquares[`${boardNotation[piece.position.row + 1][piece.position.column - 1]}`] = true;
+          attackedSquares[`${boardNotation[piece.position.row + 1][piece.position.column + 1]}`] = {
+            row: piece.position.row + 1,
+            column: piece.position.column + 1,
+          };
+          attackedSquares[`${boardNotation[piece.position.row + 1][piece.position.column - 1]}`] = {
+            row: piece.position.row + 1,
+            column: piece.position.column - 1,
+          };
         }
 
         continue;
@@ -324,7 +338,7 @@ const generateAttackedSquares = (board: Board) => {
 
       const moves = calculatePseudoLegalMoves(board, piece, true);
       for (const move of moves) {
-        attackedSquares[`${boardNotation[move.row][move.column]}`] = true;
+        attackedSquares[`${boardNotation[move.row][move.column]}`] = move;
       }
     }
   }
@@ -350,19 +364,86 @@ const generateCheckedSquares = (board: Board) => {
     fen: null,
   };
 
-  const checkedSquares: Record<string, boolean> = {};
+  const checkedSquares: Record<string, Position> = {};
   for (const pieceType of pieceTypes) {
     if (pieceType === "pawn") continue;
 
     const moves = calculatePseudoLegalMoves({ ...board }, { ...piece, type: pieceType }, true);
     for (const move of moves) {
       if (board.board[move.row][move.column].type === pieceType && board.board[move.row][move.column].color === piece.color) {
-        checkedSquares[`${boardNotation[move.row][move.column]}`] = true;
+        checkedSquares[`${boardNotation[move.row][move.column]}`] = move;
       }
     }
   }
 
   return checkedSquares;
+};
+
+const generateCaptureAndPushMask = (board: Board, checkedSquares: Record<string, Position>) => {
+  if (Object.keys(checkedSquares).length != 1) return { captureMask: {}, pushMask: {} };
+
+  let captureMask: Record<string, Position> = {};
+  const pushMask: Record<string, Position> = {};
+
+  captureMask = { ...checkedSquares };
+
+  const moveFrom = Object.keys(captureMask)[0];
+  let rowCheck = 0;
+  let columnCheck = 0;
+
+  for (const row of boardNotation) {
+    if (row.includes(moveFrom)) {
+      columnCheck = row.indexOf(moveFrom);
+      rowCheck = boardNotation.indexOf(row);
+    }
+  }
+
+  const pieceGivingCheck = board.board[rowCheck][columnCheck];
+
+  // Not a sliding piece, only capture mask
+  if (pieceGivingCheck.type == "pawn" || pieceGivingCheck.type == "knight") return { captureMask, pushMask };
+
+  const myKingRow = board.board.find((row) => row.find((piece) => piece.type === "king" && piece.color === board.currentPlayerTurn));
+  if (!myKingRow) return { captureMask, pushMask };
+  const myKing = myKingRow.find((piece) => piece.type === "king" && piece.color === board.currentPlayerTurn);
+
+  const isLineAttack = (king: Position, attacker: Position): boolean => {
+    const dr = attacker.row - king.row;
+    const dc = attacker.column - king.column;
+    return (
+      dr === 0 || // mesma file
+      dc === 0 || // mesmo rank
+      Math.abs(dr) === Math.abs(dc) // diagonal
+    );
+  };
+  const squaresBetween = (king: Position, attacker: Position): Position[] => {
+    if (!isLineAttack(king, attacker)) return [];
+
+    const dr = attacker.row - king.row;
+    const dc = attacker.column - king.column;
+    const stepRow = dr === 0 ? 0 : dr / Math.abs(dr);
+    const stepCol = dc === 0 ? 0 : dc / Math.abs(dc);
+
+    const result: Position[] = [];
+    let r = king.row + stepRow;
+    let c = king.column + stepCol;
+
+    while (r !== attacker.row || c !== attacker.column) {
+      result.push({ row: r, column: c });
+      r += stepRow;
+      c += stepCol;
+    }
+
+    return result;
+  };
+
+  const betweenSquares = squaresBetween(myKing!.position, pieceGivingCheck.position);
+  for (const move of betweenSquares) {
+    const notation = boardNotation[move.row][move.column];
+    pushMask[notation] = move;
+  }
+
+  return { captureMask, pushMask };
 };
 
 //
@@ -402,6 +483,7 @@ export {
   handleEnPassantTarget,
   generateAttackedSquares,
   generateCheckedSquares,
+  generateCaptureAndPushMask,
   getMoveFromStockfish,
   boardNotation,
 };

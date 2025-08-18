@@ -13,6 +13,7 @@ import {
   generateAttackedSquares,
   getMoveFromStockfish,
   generateCheckedSquares,
+  generateCaptureAndPushMask,
 } from "@/utils/board";
 import { calculatePseudoLegalMoves } from "@/utils/moves";
 
@@ -34,7 +35,8 @@ type GameStateStore = {
 
 const useGameState = create<GameStateStore>((set) => ({
   board: buildBoard({ fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }),
-  // board: buildBoard({ fen: "8/4k3/8/5R2/8/8/8/4K3 w - - 0 1" }),
+  // board: buildBoard({ fen: "4k3/8/6n1/1R6/8/8/8/4K3 w - - 0 1" }),
+  // board: buildBoard({ fen: "5k2/8/5r2/8/8/5Q2/3K4/8 w - - 0 1" }),
   player: "white",
   isSinglePlayer: true,
   //
@@ -89,14 +91,17 @@ const useGameState = create<GameStateStore>((set) => ({
       //
       attackedSquares: {},
       checkedSquares: {},
+      captureMask: {},
+      pushMask: {},
     };
 
     const fen = generateFen(updatedBoard);
     const attackedSquares = generateAttackedSquares(updatedBoard);
     const checkedSquares = generateCheckedSquares(updatedBoard);
+    const { captureMask, pushMask } = generateCaptureAndPushMask(updatedBoard, checkedSquares);
 
     set({
-      board: { ...updatedBoard, fen, attackedSquares, checkedSquares },
+      board: { ...updatedBoard, fen, attackedSquares, checkedSquares, captureMask, pushMask },
       selectedPiece: undefined,
       previousMoves: [...previousMoves, `${moveNotation}${Object.entries(checkedSquares).length ? "+" : ""}`],
     });
@@ -137,6 +142,8 @@ const useGameState = create<GameStateStore>((set) => ({
       //
       attackedSquares: {},
       checkedSquares: {},
+      captureMask: {},
+      pushMask: {},
     };
 
     const fen = generateFen(updatedBoard);

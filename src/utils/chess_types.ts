@@ -10,8 +10,10 @@ export type Board = {
   halfMoveClock: number;
   fullMoveNumber: number;
   //
-  attackedSquares: Record<string, boolean>;
-  checkedSquares: Record<string, boolean>;
+  attackedSquares: Record<string, Position>;
+  checkedSquares: Record<string, Position>;
+  captureMask: Record<string, Position>;
+  pushMask: Record<string, Position>;
 };
 
 export type Position = {
