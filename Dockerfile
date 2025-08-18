@@ -7,10 +7,10 @@ FROM node:21-alpine
 WORKDIR /app
 COPY . .
 
-RUN npm install
-# RUN pnpm run start
+# RUN npm install
+RUN pnpm run start
 
 EXPOSE ${PORT}
 
-CMD ["npm", "build"]
-CMD ["npm", "start"]
+CMD ["pnpm", "build"]
+CMD ["pnpm", "start"]
