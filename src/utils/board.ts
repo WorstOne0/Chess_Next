@@ -1,4 +1,5 @@
 import { Board, PieceType, Position } from "./chess_types";
+import { calculatePseudoLegalMoves } from "./moves";
 
 const boardNotation = [
   ["a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"],
@@ -115,11 +116,15 @@ const buildBoard = ({ fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq 
   return {
     board: board,
     fen,
+    //
     currentPlayerTurn: currentPlayerTurn == "b" ? "black" : "white",
     castlingRights,
     enPassantTarget,
     halfMoveClock,
     fullMoveNumber,
+    //
+    attackedSquares: {},
+    checkedSquares: {},
   };
 };
 
@@ -172,7 +177,6 @@ const generateNewBoard = (board: Board, piece: PieceType, position: Position) =>
     fen: null,
   };
 
-  console.log({ newBoard, newPiece, moveNotation });
   return { newBoard, newPiece, moveNotation };
 };
 
@@ -285,6 +289,83 @@ const handleEnPassantTarget = (board: Board, piece: PieceType, oldPosition: Posi
   return enPassantTarget;
 };
 
+const generateAttackedSquares = (board: Board) => {
+  const myKingRow = board.board.find((row) => row.find((piece) => piece.type === "king" && piece.color === board.currentPlayerTurn));
+  if (!myKingRow) return {};
+  const myKing = myKingRow.find((piece) => piece.type === "king" && piece.color === board.currentPlayerTurn);
+
+  // Remove current king
+  board.board[myKing!.position.row][myKing!.position.column] = {
+    type: "empty",
+    position: myKing!.position,
+    color: null,
+    settings: {},
+    notation: "",
+    fen: null,
+  };
+
+  const attackedSquares: Record<string, boolean> = {};
+  for (const row of board.board) {
+    for (const piece of row) {
+      if (piece.type === "empty") continue;
+      if (piece.color === board.currentPlayerTurn) continue;
+
+      if (piece.type === "pawn") {
+        if (piece.color === "white") {
+          attackedSquares[`${boardNotation[piece.position.row - 1][piece.position.column + 1]}`] = true;
+          attackedSquares[`${boardNotation[piece.position.row - 1][piece.position.column - 1]}`] = true;
+        } else {
+          attackedSquares[`${boardNotation[piece.position.row + 1][piece.position.column + 1]}`] = true;
+          attackedSquares[`${boardNotation[piece.position.row + 1][piece.position.column - 1]}`] = true;
+        }
+
+        continue;
+      }
+
+      const moves = calculatePseudoLegalMoves(board, piece, true);
+      for (const move of moves) {
+        attackedSquares[`${boardNotation[move.row][move.column]}`] = true;
+      }
+    }
+  }
+
+  delete attackedSquares["undefined"];
+  board.board[myKing!.position.row][myKing!.position.column] = myKing!;
+
+  return attackedSquares;
+};
+
+const generateCheckedSquares = (board: Board) => {
+  const myKingRow = board.board.find((row) => row.find((piece) => piece.type === "king" && piece.color === board.currentPlayerTurn));
+  if (!myKingRow) return {};
+  const myKing = myKingRow.find((piece) => piece.type === "king" && piece.color === board.currentPlayerTurn);
+
+  const pieceTypes = ["pawn", "knight", "bishop", "rook", "queen"];
+  const piece = {
+    type: "empty",
+    position: myKing!.position,
+    color: board.currentPlayerTurn === "white" ? "black" : "white",
+    settings: {},
+    notation: "",
+    fen: null,
+  };
+
+  const checkedSquares: Record<string, boolean> = {};
+  for (const pieceType of pieceTypes) {
+    if (pieceType === "pawn") continue;
+
+    const moves = calculatePseudoLegalMoves({ ...board }, { ...piece, type: pieceType }, true);
+    for (const move of moves) {
+      if (board.board[move.row][move.column].type === pieceType && board.board[move.row][move.column].color === piece.color) {
+        checkedSquares[`${boardNotation[move.row][move.column]}`] = true;
+      }
+    }
+  }
+
+  return checkedSquares;
+};
+
+//
 const getMoveFromStockfish = (move: string, board: Board) => {
   const moveFrom = move.substring(0, 2);
   const moveTo = move.substring(2, 4);
@@ -312,4 +393,15 @@ const getMoveFromStockfish = (move: string, board: Board) => {
   return { selectedPiece: { piece: selectedPiece }, position, oldRow: rowFrom, oldColumn: columnFrom };
 };
 
-export { buildBoard, generateNewBoard, generateFen, generateNotation, handleCastlingRights, handleEnPassantTarget, getMoveFromStockfish };
+export {
+  buildBoard,
+  generateNewBoard,
+  generateFen,
+  generateNotation,
+  handleCastlingRights,
+  handleEnPassantTarget,
+  generateAttackedSquares,
+  generateCheckedSquares,
+  getMoveFromStockfish,
+  boardNotation,
+};

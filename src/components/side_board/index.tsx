@@ -12,6 +12,7 @@ import white_bishop from "@/../public/neo/white_bishop.svg";
 import white_king from "@/../public/neo/white_king.svg";
 import white_knight from "@/../public/neo/white_knight.svg";
 import white_queen from "@/../public/neo/white_queen.svg";
+import white_rook from "@/../public/neo/white_rook.svg";
 
 export default function SideBoard() {
   const { previousMoves } = useGameState((state) => state);
@@ -62,6 +63,15 @@ export default function SideBoard() {
       return (
         <div className="flex items-center">
           <Image className="h-[2.4rem] w-[2.4rem] mr-[0.3rem] mb-[0.4rem]" src={white_queen} alt="bishop" />
+          <span className="text-white font-bold leading-none">{notation.substring(1)}</span>
+        </div>
+      );
+    }
+
+    if (firstLetter === "R") {
+      return (
+        <div className="flex items-center">
+          <Image className="h-[2.4rem] w-[2.4rem] mr-[0.3rem] mb-[0.4rem]" src={white_rook} alt="bishop" />
           <span className="text-white font-bold leading-none">{notation.substring(1)}</span>
         </div>
       );

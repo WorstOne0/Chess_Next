@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import useSound from "use-sound";
@@ -13,16 +14,48 @@ import { Cell } from "@/components";
 import { RiTimerLine } from "react-icons/ri";
 
 export default function Board() {
-  const { board, selectPiece, makeMove } = useGameState((state) => state);
+  const { board, selectPiece, makeMove, previousMoves } = useGameState((state) => state);
+  const [whiteTime, setWhiteTime] = useState(180);
+  const [blackTime, setBlackTime] = useState(180);
+
   const [moveSelfAudio] = useSound("/sound/move-self.mp3");
   const [captureAudio] = useSound("/sound/capture.mp3");
   const [moveCheckAudio] = useSound("/sound/move-check.mp3");
   const [promoteAudio] = useSound("/sound/promote.mp3");
   const [castleAudio] = useSound("/sound/castle.mp3");
 
-  useMount(() => {
-    console.log("board", board);
-  });
+  useMount(() => {});
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (previousMoves.length === 0) return;
+
+      if (board.currentPlayerTurn === "white") setWhiteTime((prevTime) => Math.max(0, prevTime - 1));
+      else setBlackTime((prevTime) => Math.max(0, prevTime - 1));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [whiteTime, blackTime, board.currentPlayerTurn, previousMoves.length]);
+
+  const myClock = () => {
+    const seconds = whiteTime % 60;
+    const minutes = Math.floor(whiteTime / 60);
+
+    const secondsString = seconds < 10 ? `0${seconds}` : seconds.toString();
+    const minutesString = minutes < 10 ? `0${minutes}` : minutes.toString();
+
+    return `${minutesString}:${secondsString}`;
+  };
+
+  const opponentClock = () => {
+    const seconds = blackTime % 60;
+    const minutes = Math.floor(blackTime / 60);
+
+    const secondsString = seconds < 10 ? `0${seconds}` : seconds.toString();
+    const minutesString = minutes < 10 ? `0${minutes}` : minutes.toString();
+
+    return `${minutesString}:${secondsString}`;
+  };
 
   const onDragStart = (event: DragStartEvent) => {
     selectPiece(event.active.data.current?.piece);
@@ -53,7 +86,7 @@ export default function Board() {
           </div>
           <div className="h-[4rem] w-[10rem] bg-primary rounded-[0.8rem] flex justify-center items-center">
             <RiTimerLine className="mr-[0.8rem]" size={22} color="white" />
-            <span className="text-[1.6rem] text-white font-bold">09:10</span>
+            <span className="text-[1.6rem] text-white font-bold">{opponentClock()}</span>
           </div>
         </div>
 
@@ -79,7 +112,7 @@ export default function Board() {
           </div>
           <div className="h-[4rem] w-[10rem] bg-primary rounded-[0.8rem] flex justify-center items-center">
             <RiTimerLine className="mr-[0.8rem]" size={22} color="white" />
-            <span className="text-[1.6rem] text-white font-bold">09:10</span>
+            <span className="text-[1.6rem] text-white font-bold">{myClock()}</span>
           </div>
         </div>
       </div>

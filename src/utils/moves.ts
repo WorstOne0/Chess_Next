@@ -41,7 +41,7 @@ const pawnMoves = (fullBoard: Board, piece: PieceType) => {
   return moves;
 };
 
-const knightMoves = (fullBoard: Board, piece: PieceType) => {
+const knightMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = false) => {
   const { board } = fullBoard;
   const { row, column } = piece.position;
 
@@ -53,15 +53,22 @@ const knightMoves = (fullBoard: Board, piece: PieceType) => {
     const newRow = row + rowMoves[i];
     const newColumn = column + columnMoves[i];
 
-    if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
-      moves.push({ row: newRow, column: newColumn });
+    if (!addOwnColor) {
+      if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
+        moves.push({ row: newRow, column: newColumn });
+      }
+    } else {
+      if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8) {
+        const checkColor = addOwnColor ? true : board[newRow][newColumn].color !== piece.color;
+        if (checkColor) moves.push({ row: newRow, column: newColumn });
+      }
     }
   }
 
   return moves;
 };
 
-const bishopMoves = (fullBoard: Board, piece: PieceType) => {
+const bishopMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = false) => {
   const { board } = fullBoard;
   const { row, column } = piece.position;
   const opponentColor = fullBoard.currentPlayerTurn === "white" ? "black" : "white";
@@ -74,20 +81,32 @@ const bishopMoves = (fullBoard: Board, piece: PieceType) => {
     let newRow = row + rowMoves[i];
     let newColumn = column + columnMoves[i];
 
-    while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
-      moves.push({ row: newRow, column: newColumn });
+    if (!addOwnColor) {
+      while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
+        moves.push({ row: newRow, column: newColumn });
 
-      if (board[newRow][newColumn].color === opponentColor) break;
+        if (board[newRow][newColumn].color === opponentColor) break;
 
-      newRow += rowMoves[i];
-      newColumn += columnMoves[i];
+        newRow += rowMoves[i];
+        newColumn += columnMoves[i];
+      }
+    } else {
+      while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8) {
+        moves.push({ row: newRow, column: newColumn });
+
+        if (board[newRow][newColumn].type !== "empty" && board[newRow][newColumn].color !== piece.color) break;
+        if (board[newRow][newColumn].color === opponentColor) break;
+
+        newRow += rowMoves[i];
+        newColumn += columnMoves[i];
+      }
     }
   }
 
   return moves;
 };
 
-const rookMoves = (fullBoard: Board, piece: PieceType) => {
+const rookMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = false) => {
   const { board } = fullBoard;
   const { row, column } = piece.position;
   const opponentColor = fullBoard.currentPlayerTurn === "white" ? "black" : "white";
@@ -100,29 +119,41 @@ const rookMoves = (fullBoard: Board, piece: PieceType) => {
     let newRow = row + rowMoves[i];
     let newColumn = column + columnMoves[i];
 
-    while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
-      moves.push({ row: newRow, column: newColumn });
+    if (!addOwnColor) {
+      while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
+        moves.push({ row: newRow, column: newColumn });
 
-      if (board[newRow][newColumn].color === opponentColor) break;
+        if (board[newRow][newColumn].color === opponentColor) break;
 
-      newRow += rowMoves[i];
-      newColumn += columnMoves[i];
+        newRow += rowMoves[i];
+        newColumn += columnMoves[i];
+      }
+    } else {
+      while (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8) {
+        moves.push({ row: newRow, column: newColumn });
+
+        if (board[newRow][newColumn].type !== "empty" && board[newRow][newColumn].color !== piece.color) break;
+        if (board[newRow][newColumn].color === opponentColor) break;
+
+        newRow += rowMoves[i];
+        newColumn += columnMoves[i];
+      }
     }
   }
 
   return moves;
 };
 
-const queenMoves = (fullBoard: Board, piece: PieceType) => {
+const queenMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = false) => {
   let moves: any[] = [];
 
-  moves = [...moves, ...bishopMoves(fullBoard, piece)];
-  moves = [...moves, ...rookMoves(fullBoard, piece)];
+  moves = [...moves, ...bishopMoves(fullBoard, piece, addOwnColor)];
+  moves = [...moves, ...rookMoves(fullBoard, piece, addOwnColor)];
 
   return moves;
 };
 
-const kingMoves = (fullBoard: Board, piece: PieceType) => {
+const kingMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = false) => {
   const { board } = fullBoard;
   const { row, column } = piece.position;
 
@@ -134,8 +165,15 @@ const kingMoves = (fullBoard: Board, piece: PieceType) => {
     const newRow = row + rowMoves[i];
     const newColumn = column + columnMoves[i];
 
-    if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
-      moves.push({ row: newRow, column: newColumn });
+    if (!addOwnColor) {
+      if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
+        moves.push({ row: newRow, column: newColumn });
+      }
+    } else {
+      if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8) {
+        const checkColor = addOwnColor ? true : board[newRow][newColumn].color !== piece.color;
+        if (checkColor) moves.push({ row: newRow, column: newColumn });
+      }
     }
   }
 
@@ -160,18 +198,18 @@ const kingMoves = (fullBoard: Board, piece: PieceType) => {
   return moves;
 };
 
-const calculatePseudoLegalMoves = (board: Board, piece: PieceType) => {
+const calculatePseudoLegalMoves = (board: Board, piece: PieceType, addOwnColor: boolean = false) => {
   if (piece.type === "pawn") return pawnMoves(board, piece);
 
-  if (piece.type === "knight") return knightMoves(board, piece);
+  if (piece.type === "knight") return knightMoves(board, piece, addOwnColor);
 
-  if (piece.type === "bishop") return bishopMoves(board, piece);
+  if (piece.type === "bishop") return bishopMoves(board, piece, addOwnColor);
 
-  if (piece.type === "rook") return rookMoves(board, piece);
+  if (piece.type === "rook") return rookMoves(board, piece, addOwnColor);
 
-  if (piece.type === "queen") return queenMoves(board, piece);
+  if (piece.type === "queen") return queenMoves(board, piece, addOwnColor);
 
-  if (piece.type === "king") return kingMoves(board, piece);
+  if (piece.type === "king") return kingMoves(board, piece, addOwnColor);
 
   return [];
 };

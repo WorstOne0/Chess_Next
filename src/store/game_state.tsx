@@ -5,12 +5,23 @@ import { create } from "zustand";
 import axiosInstance from "@/services/axios";
 //
 import { Board, PieceType, Position, SelectedPiece } from "@/utils/chess_types";
-import { buildBoard, generateFen, generateNewBoard, handleCastlingRights, handleEnPassantTarget, getMoveFromStockfish } from "@/utils/board";
+import {
+  buildBoard,
+  generateFen,
+  generateNewBoard,
+  handleCastlingRights,
+  handleEnPassantTarget,
+  generateAttackedSquares,
+  getMoveFromStockfish,
+  generateCheckedSquares,
+} from "@/utils/board";
 import { calculatePseudoLegalMoves } from "@/utils/moves";
+import moment from "moment";
 
 type GameStateStore = {
   board: Board;
   player: string;
+  isSinglePlayer: boolean;
   //
   selectedPiece?: SelectedPiece;
   onlySelectdPiece: boolean;
@@ -25,7 +36,9 @@ type GameStateStore = {
 
 const useGameState = create<GameStateStore>((set) => ({
   board: buildBoard({ fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }),
+  // board: buildBoard({ fen: "8/4k3/8/5R2/8/8/8/4K3 w - - 0 1" }),
   player: "white",
+  isSinglePlayer: true,
   //
   selectedPiece: undefined,
   onlySelectdPiece: false,
@@ -34,10 +47,10 @@ const useGameState = create<GameStateStore>((set) => ({
   evaluation: 0,
   //
   selectPiece: (piece: PieceType) => {
-    const { board, selectedPiece, player } = useGameState.getState();
+    const { board, selectedPiece, player, isSinglePlayer } = useGameState.getState();
 
     if (piece.type !== "empty" && piece.color !== board.currentPlayerTurn) return;
-    if (piece.color !== player) return;
+    if (!isSinglePlayer && piece.color !== player) return;
     if (selectedPiece?.piece != piece) set({ onlySelectdPiece: false });
 
     const validMoves = calculatePseudoLegalMoves(board, piece);
@@ -45,7 +58,7 @@ const useGameState = create<GameStateStore>((set) => ({
     return set({ selectedPiece: { piece, validMoves: validMoves } });
   },
   makeMove: (position: Position) => {
-    const { selectedPiece, board, onlySelectdPiece, previousMoves, makeBotMove } = useGameState.getState();
+    const { selectedPiece, board, onlySelectdPiece, previousMoves, player, isSinglePlayer, makeBotMove } = useGameState.getState();
 
     if (!selectedPiece) return { sound: "" };
 
@@ -69,24 +82,34 @@ const useGameState = create<GameStateStore>((set) => ({
     const updatedBoard = {
       board: newBoard,
       fen: "",
+      //
       currentPlayerTurn: board.currentPlayerTurn === "white" ? "black" : "white",
       castlingRights,
       enPassantTarget,
       halfMoveClock: board.halfMoveClock,
       fullMoveNumber: board.currentPlayerTurn === "black" ? board.fullMoveNumber + 1 : board.fullMoveNumber,
+      //
+      attackedSquares: {},
+      checkedSquares: {},
     };
 
+    const fen = generateFen(updatedBoard);
+    const attackedSquares = generateAttackedSquares(updatedBoard);
+    const checkedSquares = generateCheckedSquares(updatedBoard);
+
     set({
-      board: { ...updatedBoard, fen: generateFen(updatedBoard) },
+      board: { ...updatedBoard, fen, attackedSquares, checkedSquares },
       selectedPiece: undefined,
-      previousMoves: [...previousMoves, moveNotation],
+      previousMoves: [...previousMoves, `${moveNotation}${Object.entries(checkedSquares).length ? "+" : ""}`],
     });
 
     let sound = "move-self.mp3";
     if (moveNotation.includes("x")) sound = "capture.mp3";
     if (moveNotation === "O-O" || moveNotation === "O-O-O") sound = "castle.mp3";
+    if (Object.entries(checkedSquares).length) sound = "move-check.mp3";
+    if (moveNotation.includes("=")) sound = "promote.mp3";
 
-    makeBotMove();
+    if (!isSinglePlayer) makeBotMove();
 
     return { sound };
   },
@@ -107,15 +130,22 @@ const useGameState = create<GameStateStore>((set) => ({
     const updatedBoard = {
       board: newBoard,
       fen: "",
+      //
       currentPlayerTurn: board.currentPlayerTurn === "white" ? "black" : "white",
       castlingRights,
       enPassantTarget,
       halfMoveClock: board.halfMoveClock,
       fullMoveNumber: board.currentPlayerTurn === "black" ? board.fullMoveNumber + 1 : board.fullMoveNumber,
+      //
+      attackedSquares: {},
+      checkedSquares: {},
     };
 
+    const fen = generateFen(updatedBoard);
+    const attackedSquares = generateAttackedSquares(updatedBoard);
+
     set({
-      board: { ...updatedBoard, fen: generateFen(updatedBoard) },
+      board: { ...updatedBoard, fen, attackedSquares },
       selectedPiece: undefined,
       previousMoves: [...previousMoves, moveNotation],
     });

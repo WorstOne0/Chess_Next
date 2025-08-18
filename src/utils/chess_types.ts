@@ -9,6 +9,9 @@ export type Board = {
   enPassantTarget: string;
   halfMoveClock: number;
   fullMoveNumber: number;
+  //
+  attackedSquares: Record<string, boolean>;
+  checkedSquares: Record<string, boolean>;
 };
 
 export type Position = {
