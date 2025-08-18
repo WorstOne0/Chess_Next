@@ -3,6 +3,7 @@
 // Next
 import { useEffect, useRef } from "react";
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export const useMount = (mountFunction: Function) => {
   const firstRender = useRef(true);
 
