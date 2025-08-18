@@ -8,9 +8,8 @@ WORKDIR /app
 COPY . .
 
 # RUN npm install
-RUN pnpm run start
+RUN pnpm run build
 
 EXPOSE ${PORT}
 
-CMD ["pnpm", "build"]
 CMD ["pnpm", "start"]
