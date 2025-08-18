@@ -82,16 +82,7 @@ export default function SideBoard() {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-center bg-primary p-[1.5rem]">
-      <div className="w-full flex space-x-[1.5rem]">
-        <Card className="h-[6rem] w-[50%] flex justify-center items-center">
-          <FaHandshake className="text-primary" size={24} />
-          <span className="text-[1.8rem] text-primary font-bold">Draw</span>
-        </Card>
-        <Card className="h-[6rem] w-[50%] flex justify-center items-center">
-          <RiFlagFill className="text-primary" size={24} />
-          <span className="text-[1.8rem] text-primary font-bold">Resign</span>
-        </Card>
-      </div>
+      <div className="w-full"></div>
 
       <div className="min-h-0 w-full grow flex flex-col items-start my-[1.5rem]">
         <div className="w-full flex justify-between items-center">
@@ -113,17 +104,28 @@ export default function SideBoard() {
         </div>
       </div>
 
-      <div className="w-full flex mb-[7rem] space-x-[1.5rem]">
-        <Card className="h-[6rem] min-w-0 grow flex justify-center items-center">
+      <div className="w-full flex space-x-[1.5rem] mb-[1.5rem]">
+        <Card className="h-[5.5rem] w-[50%] flex justify-center items-center">
+          <FaHandshake className="text-primary" size={24} />
+          <span className="text-[1.8rem] text-primary font-bold">Draw</span>
+        </Card>
+        <Card className="h-[5.5rem] w-[50%] flex justify-center items-center">
+          <RiFlagFill className="text-primary" size={24} />
+          <span className="text-[1.8rem] text-primary font-bold">Resign</span>
+        </Card>
+      </div>
+
+      <div className="w-full flex space-x-[1.5rem]">
+        <Card className="h-[5.5rem] min-w-0 grow flex justify-center items-center">
           <LuArrowLeftToLine size={24} />
         </Card>
-        <Card className="h-[6rem] min-w-0 grow flex justify-center items-center">
+        <Card className="h-[5.5rem] min-w-0 grow flex justify-center items-center">
           <LuArrowLeft size={24} />
         </Card>
-        <Card className="h-[6rem] min-w-0 grow flex justify-center items-center">
+        <Card className="h-[5.5rem] min-w-0 grow flex justify-center items-center">
           <LuArrowRight size={24} />
         </Card>
-        <Card className="h-[6rem] min-w-0 grow flex justify-center items-center">
+        <Card className="h-[5.5rem] min-w-0 grow flex justify-center items-center">
           <LuArrowRightToLine size={24} />
         </Card>
       </div>

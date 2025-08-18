@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { boardNotation } from "./board";
 import { Board, PieceType } from "./chess_types";
 
 const pawnMoves = (fullBoard: Board, piece: PieceType) => {
@@ -154,7 +155,7 @@ const queenMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = f
 };
 
 const kingMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = false) => {
-  const { board } = fullBoard;
+  const { board, attackedSquares } = fullBoard;
   const { row, column } = piece.position;
 
   const moves = [];
@@ -167,6 +168,7 @@ const kingMoves = (fullBoard: Board, piece: PieceType, addOwnColor: boolean = fa
 
     if (!addOwnColor) {
       if (newRow >= 0 && newRow < 8 && newColumn >= 0 && newColumn < 8 && board[newRow][newColumn].color !== piece.color) {
+        if (boardNotation[newRow][newColumn] in attackedSquares) continue;
         moves.push({ row: newRow, column: newColumn });
       }
     } else {

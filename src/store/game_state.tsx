@@ -1,6 +1,5 @@
 "use client";
 
-//
 import { create } from "zustand";
 import axiosInstance from "@/services/axios";
 //
@@ -16,7 +15,6 @@ import {
   generateCheckedSquares,
 } from "@/utils/board";
 import { calculatePseudoLegalMoves } from "@/utils/moves";
-import moment from "moment";
 
 type GameStateStore = {
   board: Board;
@@ -58,7 +56,7 @@ const useGameState = create<GameStateStore>((set) => ({
     return set({ selectedPiece: { piece, validMoves: validMoves } });
   },
   makeMove: (position: Position) => {
-    const { selectedPiece, board, onlySelectdPiece, previousMoves, player, isSinglePlayer, makeBotMove } = useGameState.getState();
+    const { selectedPiece, board, onlySelectdPiece, previousMoves, isSinglePlayer, makeBotMove } = useGameState.getState();
 
     if (!selectedPiece) return { sound: "" };
 
@@ -143,9 +141,10 @@ const useGameState = create<GameStateStore>((set) => ({
 
     const fen = generateFen(updatedBoard);
     const attackedSquares = generateAttackedSquares(updatedBoard);
+    const checkedSquares = generateCheckedSquares(updatedBoard);
 
     set({
-      board: { ...updatedBoard, fen, attackedSquares },
+      board: { ...updatedBoard, fen, attackedSquares, checkedSquares },
       selectedPiece: undefined,
       previousMoves: [...previousMoves, moveNotation],
     });
@@ -153,6 +152,8 @@ const useGameState = create<GameStateStore>((set) => ({
     let sound = "move-self.mp3";
     if (moveNotation.includes("x")) sound = "capture.mp3";
     if (moveNotation === "O-O" || moveNotation === "O-O-O") sound = "castle.mp3";
+    if (Object.entries(checkedSquares).length) sound = "move-check.mp3";
+    if (moveNotation.includes("=")) sound = "promote.mp3";
 
     return { sound };
   },
