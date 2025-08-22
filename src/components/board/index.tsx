@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { DndContext, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import useSound from "use-sound";
@@ -13,8 +15,14 @@ import { Cell } from "@/components";
 //
 import { RiTimerLine } from "react-icons/ri";
 
+import white_bishop from "@/../public/neo/white_bishop.svg";
+import white_knight from "@/../public/neo/white_knight.svg";
+import white_queen from "@/../public/neo/white_queen.svg";
+import white_rook from "@/../public/neo/white_rook.svg";
+import white_pawn from "@/../public/neo/white_pawn.svg";
+
 export default function Board() {
-  const { board, selectPiece, makeMove, previousMoves } = useGameState((state) => state);
+  const { board, selectPiece, makeMove, previousMoves, capturedPieces } = useGameState((state) => state);
   const [whiteTime, setWhiteTime] = useState(180);
   const [blackTime, setBlackTime] = useState(180);
 
@@ -72,16 +80,41 @@ export default function Board() {
     if (sound == "castle.mp3") castleAudio();
   };
 
+  const handleCapturedPieces = (color: string) => {
+    const order = ["pawn", "knight", "bishop", "rook", "queen"];
+    const pieces = capturedPieces.filter((piece) => piece.color === color).sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
+    const images: Record<string, any> = {
+      queen: white_queen,
+      rook: white_rook,
+      knight: white_knight,
+      bishop: white_bishop,
+      pawn: white_pawn,
+    };
+
+    return (
+      <div className="flex">
+        {pieces.map((piece) => (
+          <Image
+            key={`${piece.type}_${piece.color}`}
+            className="h-[1.8rem] w-[1.8rem] mr-[0.3rem] mb-[0.4rem]"
+            src={images[piece.type]}
+            alt="queen"
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
     <DndContext onDragStart={onDragStart} onDragEnd={onDragEnd} modifiers={[snapCenterToCursor]}>
-      <div className="h-full w-full flex flex-col bg-background">
+      <div className="h-full w-full flex flex-col bg-background select-none">
         {/* Opponent */}
         <div className="min-h-[6rem] h-[6rem] w-full flex justify-between items-center px-[2rem] mb-[1.5rem]">
           <div className="flex items-center">
             <div className="w-[5rem] h-[5rem] bg-primary rounded-[0.8rem]"></div>
             <div className="flex flex-col ml-[1.5rem]">
               <span className="">Opponent</span>
-              <span className="text-[1.4rem]">400</span>
+              <div className="h-[1.8rem] w-full">{handleCapturedPieces("white")}</div>
             </div>
           </div>
           <div className="h-[4rem] w-[10rem] bg-primary rounded-[0.8rem] flex justify-center items-center">
@@ -107,7 +140,7 @@ export default function Board() {
             <div className="w-[5rem] h-[5rem] bg-primary rounded-[0.8rem]"></div>
             <div className="flex flex-col ml-[1.5rem]">
               <span className="">Player</span>
-              <span className="text-[1.4rem]">9999</span>
+              <div className="h-[1.8rem] w-full">{handleCapturedPieces("black")}</div>
             </div>
           </div>
           <div className="h-[4rem] w-[10rem] bg-primary rounded-[0.8rem] flex justify-center items-center">

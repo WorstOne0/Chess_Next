@@ -7,6 +7,8 @@ import { Card } from "@/components";
 import { FaHandshake } from "react-icons/fa";
 import { RiFlagFill } from "react-icons/ri";
 import { LuArrowLeft, LuArrowRight, LuArrowLeftToLine, LuArrowRightToLine } from "react-icons/lu";
+import { MdOutlinePersonOutline } from "react-icons/md";
+import { RiTimerLine } from "react-icons/ri";
 
 import white_bishop from "@/../public/neo/white_bishop.svg";
 import white_king from "@/../public/neo/white_king.svg";
@@ -82,7 +84,16 @@ export default function SideBoard() {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-center bg-primary p-[1.5rem]">
-      <div className="w-full"></div>
+      <div className="w-full flex space-x-[1.5rem] mb-[1.5rem]">
+        <Card className="h-[5.5rem] w-[50%] flex justify-center items-center">
+          <MdOutlinePersonOutline className="text-primary dark:text-white" size={24} />
+          <span className="text-[1.8rem] text-primary dark:text-white font-bold">Single</span>
+        </Card>
+        <Card className="h-[5.5rem] w-[50%] flex justify-center items-center">
+          <RiTimerLine className="text-primary dark:text-white" size={24} />
+          <span className="text-[1.8rem] text-primary dark:text-white font-bold">3min +0</span>
+        </Card>
+      </div>
 
       <div className="min-h-0 w-full grow flex flex-col items-start my-[1.5rem]">
         <div className="w-full flex justify-between items-center">
@@ -106,12 +117,12 @@ export default function SideBoard() {
 
       <div className="w-full flex space-x-[1.5rem] mb-[1.5rem]">
         <Card className="h-[5.5rem] w-[50%] flex justify-center items-center">
-          <FaHandshake className="text-primary" size={24} />
-          <span className="text-[1.8rem] text-primary font-bold">Draw</span>
+          <FaHandshake className="text-primary dark:text-white" size={24} />
+          <span className="text-[1.8rem] text-primary dark:text-white font-bold">Draw</span>
         </Card>
         <Card className="h-[5.5rem] w-[50%] flex justify-center items-center">
-          <RiFlagFill className="text-primary" size={24} />
-          <span className="text-[1.8rem] text-primary font-bold">Resign</span>
+          <RiFlagFill className="text-primary dark:text-white" size={24} />
+          <span className="text-[1.8rem] text-primary dark:text-white font-bold">Resign</span>
         </Card>
       </div>
 

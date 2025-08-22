@@ -1,13 +1,22 @@
 "use client";
 
+import useSound from "use-sound";
 import { useDroppable } from "@dnd-kit/core";
+//
+import { useGameState } from "@/store";
+//
 import { PieceType } from "@/utils/chess_types";
 import Piece from "../piece";
-import { useGameState } from "@/store";
 
 export default function Cell({ row, column, piece }: Readonly<{ row: number; column: number; piece: PieceType }>) {
   const { setNodeRef } = useDroppable({ id: `cell_${row}_${column}`, data: { position: { row, column } } });
-  const { board, selectedPiece } = useGameState((state) => state);
+  const { board, selectedPiece, makeMove } = useGameState((state) => state);
+
+  const [moveSelfAudio] = useSound("/sound/move-self.mp3");
+  const [captureAudio] = useSound("/sound/capture.mp3");
+  const [moveCheckAudio] = useSound("/sound/move-check.mp3");
+  const [promoteAudio] = useSound("/sound/promote.mp3");
+  const [castleAudio] = useSound("/sound/castle.mp3");
 
   const rows = ["1", "2", "3", "4", "5", "6", "7", "8"];
   const columns = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -20,6 +29,20 @@ export default function Cell({ row, column, piece }: Readonly<{ row: number; col
           ? "inset 10px 10px 20px #826247, inset -10px -10px 20px #e8ae7f;"
           : "0px 0px 10px #826247, -0px -0px 10px #e8ae7f",
     };
+  };
+
+  const handleClick = () => {
+    console.log("click");
+    if (selectedPiece == null) return;
+
+    const { sound } = makeMove({ row, column });
+    if (!sound) return;
+
+    if (sound == "move-self.mp3") moveSelfAudio();
+    if (sound == "capture.mp3") captureAudio();
+    if (sound == "move-check.mp3") moveCheckAudio();
+    if (sound == "promote.mp3") promoteAudio();
+    if (sound == "castle.mp3") castleAudio();
   };
 
   const isSelectedPiece = selectedPiece && selectedPiece.piece.position.row === row && selectedPiece.piece.position.column === column;
@@ -47,7 +70,12 @@ export default function Cell({ row, column, piece }: Readonly<{ row: number; col
   };
 
   return (
-    <div ref={setNodeRef} className="h-full w-full flex justify-center items-center relative rounded-[0.8rem]" style={cellStyle()}>
+    <div
+      ref={setNodeRef}
+      className="h-full w-full flex justify-center items-center relative rounded-[0.8rem]"
+      style={cellStyle()}
+      onClick={handleClick}
+    >
       <Piece piece={piece} />
 
       {column === 0 && (

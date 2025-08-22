@@ -169,6 +169,7 @@ const generateNewBoard = (board: Board, piece: PieceType, position: Position) =>
     moveNotation = "O-O-O";
   }
 
+  const oldPiece = newBoard[position.row][position.column];
   newBoard[position.row][position.column] = newPiece;
   newBoard[oldRow][oldColumn] = {
     type: "empty",
@@ -179,7 +180,7 @@ const generateNewBoard = (board: Board, piece: PieceType, position: Position) =>
     fen: null,
   };
 
-  return { newBoard, newPiece, moveNotation };
+  return { newBoard, newPiece, moveNotation, oldPiece };
 };
 
 const generateFen = (board: Board) => {

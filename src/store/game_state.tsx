@@ -27,6 +27,7 @@ type GameStateStore = {
   //
   previousMoves: string[];
   evaluation: number;
+  capturedPieces: PieceType[];
   //
   selectPiece: (piece: PieceType) => void;
   makeMove: (position: Position) => { sound: string };
@@ -35,8 +36,6 @@ type GameStateStore = {
 
 const useGameState = create<GameStateStore>((set) => ({
   board: buildBoard({ fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }),
-  // board: buildBoard({ fen: "4k3/8/6n1/1R6/8/8/8/4K3 w - - 0 1" }),
-  // board: buildBoard({ fen: "5k2/8/5r2/8/8/5Q2/3K4/8 w - - 0 1" }),
   player: "white",
   isSinglePlayer: true,
   //
@@ -45,6 +44,7 @@ const useGameState = create<GameStateStore>((set) => ({
   //
   previousMoves: [],
   evaluation: 0,
+  capturedPieces: [],
   //
   selectPiece: (piece: PieceType) => {
     const { board, selectedPiece, player, isSinglePlayer } = useGameState.getState();
@@ -58,7 +58,7 @@ const useGameState = create<GameStateStore>((set) => ({
     return set({ selectedPiece: { piece, validMoves: validMoves } });
   },
   makeMove: (position: Position) => {
-    const { selectedPiece, board, onlySelectdPiece, previousMoves, isSinglePlayer, makeBotMove } = useGameState.getState();
+    const { selectedPiece, board, onlySelectdPiece, previousMoves, isSinglePlayer, makeBotMove, capturedPieces } = useGameState.getState();
 
     if (!selectedPiece) return { sound: "" };
 
@@ -74,7 +74,7 @@ const useGameState = create<GameStateStore>((set) => ({
 
     const oldRow = selectedPiece.piece.position.row;
     const oldColumn = selectedPiece.piece.position.column;
-    const { newBoard, newPiece, moveNotation } = generateNewBoard(board, selectedPiece.piece, position);
+    const { newBoard, newPiece, moveNotation, oldPiece } = generateNewBoard(board, selectedPiece.piece, position);
 
     const castlingRights = handleCastlingRights(board, newPiece, { row: oldRow, column: oldColumn });
     const enPassantTarget = handleEnPassantTarget(board, newPiece, { row: oldRow, column: oldColumn });
@@ -104,6 +104,7 @@ const useGameState = create<GameStateStore>((set) => ({
       board: { ...updatedBoard, fen, attackedSquares, checkedSquares, captureMask, pushMask },
       selectedPiece: undefined,
       previousMoves: [...previousMoves, `${moveNotation}${Object.entries(checkedSquares).length ? "+" : ""}`],
+      capturedPieces: [...capturedPieces, oldPiece],
     });
 
     let sound = "move-self.mp3";
